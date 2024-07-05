@@ -33,7 +33,7 @@ static void
 merge_wcond_ (cv::Mat *maze, std::set<seg_t> *sets, int rows, int cols,
               int set_r, int set_c, int max, dir direction)
 {
-    int idx = set_r * cols + set_c;
+    int idx       = set_r * cols + set_c;
     int mat_r_cur = 2 * set_r + 1;
     int mat_c_cur = 2 * set_c + 1;
     switch (direction) {
@@ -57,7 +57,7 @@ merge_wcond_ (cv::Mat *maze, std::set<seg_t> *sets, int rows, int cols,
         return;
     }
 
-    int next = set_r * cols + set_c;
+    int next       = set_r * cols + set_c;
     int mat_r_next = 2 * set_r + 1;
     int mat_c_next = 2 * set_c + 1;
 
@@ -103,7 +103,7 @@ kruskal_ (cv::Mat *maze, int rows, int cols)
 {
     int set_r = (rows - 1) / 2;
     int set_c = (rows - 1) / 2;
-    int len = set_r * set_c;
+    int len   = set_r * set_c;
     // vector of heap pointers to the sets
     std::set<seg_t> sets;
     for (int i = 0; i < len; ++i)
@@ -116,8 +116,8 @@ kruskal_ (cv::Mat *maze, int rows, int cols)
         for (int j = 0; j < set_c; ++j)
             shuffled_cells[i * set_c + j] = { i, j };
 
-    std::random_device rd;
-    std::mt19937 gen (rd ());
+    std::random_device              rd;
+    std::mt19937                    gen (rd ());
     std::uniform_int_distribution<> r_distr (0, set_r - 1);
     std::uniform_int_distribution<> c_distr (0, set_c - 1);
     std::shuffle (shuffled_cells.begin (), shuffled_cells.end (),
@@ -167,10 +167,11 @@ generate (int size)
     // initialize the maze by creating a grid of walls
     initscan_ (&maze, size, size);
     std::cout << "[   \033[32;1mOK\033[0m   ] scan maze matrix" << std::endl;
-    cv::Mat cpy;
-    cv::resize (maze, cpy, cv::Size (1024, 1024), 0, 0, cv::INTER_NEAREST);
-    cv::imshow ("initscan_ output", cpy);
-    cv::waitKey (0);
+
+    // cv::Mat cpy;
+    // cv::resize (maze, cpy, cv::Size (1024, 1024), 0, 0, cv::INTER_NEAREST);
+    // cv::imshow ("initscan_ output", cpy);
+    // cv::waitKey (0);
 
     // generate the maze using kruskal's algorithm to remove walls
     kruskal_ (&maze, size, size);
@@ -178,7 +179,7 @@ generate (int size)
               << std::endl;
 
     // add start and end as the top right and bottom left, respectively
-    maze.ptr<uchar> (0)[1] = GN_UC_WHT;
+    maze.ptr<uchar> (0)[1]                         = GN_UC_WHT;
     maze.ptr<uchar> (maze.rows - 1)[maze.cols - 2] = GN_UC_WHT;
 
     return maze;
