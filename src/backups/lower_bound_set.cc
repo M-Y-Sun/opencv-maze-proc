@@ -83,17 +83,13 @@ merge_wcond_ (cv::Mat *maze, std::set<seg_t> *sets, int rows, int cols,
             && in_bounds (mat_c_next, maze->cols));
 
     // if idx and next don't point to the same set (not connected in the maze)
-    seg_t cur_seg, next_seg;
-    for (seg_t seg : *sets) {
-        if (seg.ptr->count (idx))
-            cur_seg = seg;
-        if (seg.ptr->count (next))
-            next_seg = seg;
-    }
+    std::set<seg_t>::iterator it_cur = sets->lower_bound ({ idx, nullptr });
+    std::set<seg_t>::iterator it_next = sets->lower_bound ({ next, nullptr });
+    if (it_cur != it_next) {
+        // next must be less than idx since we are deleting next
+        if (it_next->id > it_cur->id)
+            swap (it_cur, it_next);
 
-    assert (cur_seg.ptr != nullptr && next_seg.ptr != nullptr);
-
-    if (cur_seg.ptr != next_seg.ptr) {
         // remove the wall between the two indices in the maze matrix
         std::cout << "[  \033[37;1mINFO\033[0m  ] write to pixel ("
                   << (mat_r_cur + mat_r_next) / 2 << ','
@@ -101,16 +97,17 @@ merge_wcond_ (cv::Mat *maze, std::set<seg_t> *sets, int rows, int cols,
                   << next << '\n';
         maze->ptr<uchar> ((mat_r_cur + mat_r_next)
                           / 2)[(mat_c_cur + mat_c_next) / 2]
-            = UC_WHT;
+            = 127;
 
         // clean up
-        cur_seg.ptr->merge (*next_seg.ptr);  // merge the sets
-        next_seg.ptr->~set ();               // destroy the old set
-        delete next_seg.ptr;                 // free the pointer to the set
-        sets->erase (sets->find (next_seg)); // erase the old set
+        it_cur->ptr->merge (*it_next->ptr); // merge the sets
+        it_next->ptr->~set ();              // destroy the old set
+        delete it_next->ptr;                // free the pointer to the set
+        sets->erase (it_next);              // erase the old set
     } else {
         std::cout << "[  \033[37;1mINFO\033[0m  ] already processed " << idx
-                  << " and " << next << '\n';
+                  << " and " << next << " with lower bound " << it_cur->id
+                  << '\n';
     }
 }
 
@@ -136,20 +133,15 @@ kruskal_ (cv::Mat *maze, int rows, int cols)
     std::mt19937 gen (rd ());
     std::uniform_int_distribution<> r_distr (0, set_r - 1);
     std::uniform_int_distribution<> c_distr (0, set_c - 1);
-    std::shuffle (shuffled_cells.begin (), shuffled_cells.end (),
-                  std::default_random_engine ());
+    // std::shuffle (shuffled_cells.begin (), shuffled_cells.end (),
+    //               std::default_random_engine ());
 
     // join the sets
-
-    // ------ all possible connections (n^2) ------ //
-    //
     // for (std::pair<int, int> cell : shuffled_cells)
     //     for (int i = 0; i < 4; ++i)
     //         merge_wcond_ (maze, &sets, set_r, set_c, cell.first,
     //         cell.second,
     //                       len, (dir)i);
-
-    // ------ random ------- //
     while (sets.size () > 1)
         for (int i = 0; i < 4; ++i)
             merge_wcond_ (maze, &sets, set_r, set_c, r_distr (gen),
@@ -180,22 +172,16 @@ generate (int size)
     std::cout << "[   \033[32;1mOK\033[0m   ] initialize maze matrix"
               << std::endl;
 
-    // initialize the maze by creating a grid of walls
     initscan_ (&maze, size, size);
     std::cout << "[   \033[32;1mOK\033[0m   ] scan maze matrix" << std::endl;
-    cv::Mat cpy;
-    cv::resize (maze, cpy, cv::Size (1024, 1024), 0, 0, cv::INTER_NEAREST);
-    cv::imshow ("initscan_ output", cpy);
-    cv::waitKey (0);
+    // cv::Mat cpy;
+    // cv::resize (maze, cpy, cv::Size (256, 256), 0, 0, cv::INTER_NEAREST);
+    // cv::imshow ("initscan_ output", cpy);
+    // cv::waitKey (0);
 
-    // generate the maze using kruskal's algorithm to remove walls
     kruskal_ (&maze, size, size);
     std::cout << "[   \033[32;1mOK\033[0m   ] finish maze matrix generation"
               << std::endl;
-
-    // add start and end as the top right and bottom left, respectively
-    maze.ptr<uchar> (0)[1] = UC_WHT;
-    maze.ptr<uchar> (maze.rows - 1)[maze.cols - 2] = UC_WHT;
 
     return maze;
 }
@@ -203,8 +189,8 @@ generate (int size)
 int
 main ()
 {
-    cv::Mat maze = generate (45);
-    cv::resize (maze, maze, cv::Size (1024, 1024), 0, 0, cv::INTER_NEAREST);
+    cv::Mat maze = generate (7);
+    cv::resize (maze, maze, cv::Size (256, 256), 0, 0, cv::INTER_NEAREST);
     cv::imshow ("maze output", maze);
     cv::waitKey (0);
 
