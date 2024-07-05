@@ -41,7 +41,7 @@ cv_morph_solve (cv::Mat src)
                       cv::FILLED);
 
     // dilate and erode
-    cv::Mat kernel = cv::Mat::ones (32, 32, CV_8UC1);
+    cv::Mat kernel = cv::Mat::ones (3, 3, CV_8UC1);
     cv::dilate (path, path, kernel);
     cv::Mat eroded;
     cv::erode (path, eroded, kernel);
@@ -53,6 +53,9 @@ cv_morph_solve (cv::Mat src)
 
     // subtract
     cv::absdiff (path, eroded, path);
+
+    // cv::Mat elem = cv::getStructuringElement (cv::MORPH_RECT, cv::Size (3,
+    // 3)); cv::morphologyEx (path, path, cv::MORPH_GRADIENT, elem);
 
     // draw the path
     std::vector<cv::Mat> channels;

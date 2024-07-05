@@ -27,6 +27,6 @@ static void merge_wcond_ (cv::Mat *maze, std::set<seg_t> *sets, int rows,
                           int cols, int set_r, int set_c, int max,
                           dir direction);
 static void kruskal_ (cv::Mat *maze, int rows, int cols);
-cv::Mat     generate (int size);
+cv::Mat     generate (int size, int log_level);
 
 #endif
