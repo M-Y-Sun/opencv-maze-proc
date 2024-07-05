@@ -12,23 +12,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#define UC_WHT 255
-#define UC_BLK 0
-
-#define in_bounds(n, max) (n >= 0 && n < max)
-
-enum class dir { LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3 };
-
-struct seg_t {
-    int id;
-    std::set<int> *ptr;
-
-    bool
-    operator< (const seg_t &other) const
-    {
-        return id < other.id;
-    }
-};
+#include "generate.hh"
 
 static void
 initscan_ (cv::Mat *img, int rows, int cols)
@@ -41,7 +25,7 @@ initscan_ (cv::Mat *img, int rows, int cols)
     for (int i = 1; i < rows; i = i + 2) {
         uchar *p = img->ptr<uchar> (i);
         for (int j = 1; j < cols; j = j + 2)
-            p[j] = UC_WHT;
+            p[j] = GN_UC_WHT;
     }
 }
 
@@ -101,7 +85,7 @@ merge_wcond_ (cv::Mat *maze, std::set<seg_t> *sets, int rows, int cols,
                   << next << '\n';
         maze->ptr<uchar> ((mat_r_cur + mat_r_next)
                           / 2)[(mat_c_cur + mat_c_next) / 2]
-            = UC_WHT;
+            = GN_UC_WHT;
 
         // clean up
         cur_seg.ptr->merge (*next_seg.ptr);  // merge the sets
@@ -194,19 +178,8 @@ generate (int size)
               << std::endl;
 
     // add start and end as the top right and bottom left, respectively
-    maze.ptr<uchar> (0)[1] = UC_WHT;
-    maze.ptr<uchar> (maze.rows - 1)[maze.cols - 2] = UC_WHT;
+    maze.ptr<uchar> (0)[1] = GN_UC_WHT;
+    maze.ptr<uchar> (maze.rows - 1)[maze.cols - 2] = GN_UC_WHT;
 
     return maze;
-}
-
-int
-main ()
-{
-    cv::Mat maze = generate (45);
-    cv::resize (maze, maze, cv::Size (1024, 1024), 0, 0, cv::INTER_NEAREST);
-    cv::imshow ("maze output", maze);
-    cv::waitKey (0);
-
-    return 0;
 }
